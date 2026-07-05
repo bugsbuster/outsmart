@@ -65,3 +65,37 @@ ARENA=random
 If you have problems, please do get in touch - I'd love to help!  
 I'm at ed [at] edwarddonner [dot] com.
 
+---
+
+## Changes in this fork
+
+This fork extends the original project with the following improvements:
+
+**Setup & dependencies**
+- Migrated to `uv` + `pyproject.toml` for fully local dependency management — no conda or system-wide installs needed. Python 3.11 is downloaded automatically by `uv sync`.
+
+**Provider flexibility**
+- The app now auto-detects which providers are configured (based on available API keys) and only offers those in the UI.
+- Added **Ollama** support with dynamic model discovery: models are queried from the local server at startup, preserving full tags (`gemma4:26b`, `gemma4:31b`, etc.).
+- Added **OpenRouter** support: any model from the OpenRouter catalogue can be entered as free text.
+- Custom model names are supported for all providers via prefix-based routing.
+
+**Model selection UI**
+- Replaced random model assignment with a provider-first setup screen: choose the provider, then the model for each player slot.
+- Ollama's model list includes a live filter input for quick search across many installed models.
+
+**Game controls**
+- Opt-in game saving: a checkbox in the setup screen controls whether results are persisted to MongoDB (off by default).
+- MongoDB sidebar shows distinct diagnostics for missing URI vs failed connection.
+
+**Display improvements**
+- Consistent per-player color palette across the coin chart, player headers, and all name references (give/take/alliances/messages).
+- `<think>...</think>` blocks from reasoning models (DeepSeek-R1, Qwen3) are stripped from the strategy display.
+- Received messages are shown inline in each player's column, with the sender's name colored by their identity color.
+
+**Run locally**
+```bash
+uv sync
+uv run python -m streamlit run app.py
+```
+
