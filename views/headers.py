@@ -3,6 +3,7 @@ import base64
 from io import BytesIO
 from game.arenas import Arena
 from typing import Callable
+from util.setup import PLAYER_COLORS_HEX
 
 
 def display_overview(arena: Arena, do_turn: Callable, do_auto_turn: Callable) -> None:
@@ -82,7 +83,7 @@ def display_chart(arena: Arena, header_container: st.container):
         st.line_chart(
             data=arena.table(),
             height=300,
-            color=["#FFA500", "#FF4500", "#FFD700", "#8B4513"],
+            color=PLAYER_COLORS_HEX[: len(arena.players)],
         )
 
 

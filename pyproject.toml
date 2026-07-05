@@ -1,0 +1,25 @@
+[project]
+name = "outsmart"
+version = "0.1.0"
+requires-python = "==3.11.*"
+dependencies = [
+    "pydantic",
+    "python-dotenv",
+    "numpy",
+    "scipy",
+    "openai",
+    "anthropic",
+    "google-generativeai",
+    "streamlit",
+    "pandas",
+    "charset-normalizer",
+    "watchdog",
+    "pymongo",
+    "trueskill",
+    "groq",
+]
+
+[dependency-groups]
+dev = [
+    "black",
+]

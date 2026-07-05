@@ -11,9 +11,11 @@ python -m streamlit run app.py
 from dotenv import load_dotenv
 import logging
 from game.arenas import Arena
+from interfaces.llms import LLM
 import streamlit as st
 from util.setup import setup_logger, STYLE
 from views.displays import Display
+from views.setup import display_setup
 
 root = logging.getLogger()
 if "root" not in st.session_state:
@@ -34,7 +36,14 @@ st.set_page_config(
 st.markdown(STYLE, unsafe_allow_html=True)
 
 if "arena" not in st.session_state:
-    st.session_state.arena = Arena.default()
+    result = display_setup()
+    if result is None:
+        st.stop()
+    chosen_models, save_results = result
+    st.session_state.arena = Arena.with_models(chosen_models, save_results=save_results)
+    st.session_state.auto_move = False
+    st.session_state.do_move = False
+    st.rerun()
 
 if "auto_move" not in st.session_state:
     st.session_state.auto_move = False

@@ -32,14 +32,29 @@ def display_latest():
 def display_sidebar():
     with st.sidebar:
         st.markdown("### Outsmart Leaderboard")
-        if os.getenv("MONGO_URI"):
+        mongo_uri = os.getenv("MONGO_URI")
+
+        if not mongo_uri:
+            st.warning(
+                "MONGO_URI is not set — leaderboard unavailable.  \n"
+                "Add it to your environment variables to enable rankings."
+            )
+            return
+
+        try:
+            count = Game.count()
+        except Exception as e:
+            st.error(
+                f"MONGO_URI is set but the database connection failed.  \n"
+                f"**Error:** `{e}`  \n\n"
+                "Check that the URI is correct and the cluster is reachable."
+            )
+            return
+
+        st.write(f"There have been {count:,} games recorded.")
+        if st.button("Calculate Rankings"):
             try:
-                st.write(f"There have been {Game.count():,} games recorded.")
-                if st.button("Calculate Rankings"):
-                    display_ranks()
-                    display_latest()
+                display_ranks()
+                display_latest()
             except Exception as e:
-                st.write("Unable to calculate rankings - the database may not be available.")
-                st.write(f"Underlying error was {e}")
-        else:
-            st.write("LLM rankings aren't available as this app isn't connected to the database")
+                st.error(f"Failed to load rankings: `{e}`")

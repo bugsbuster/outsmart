@@ -26,14 +26,16 @@ class Arena:
     NAMES = ["Alex", "Blake", "Charlie", "Drew", "Eden", "Fallon", "Gale", "Harper"]
     TEMPERATURE = 0.7
 
-    def __init__(self, players: List[Player]):
+    def __init__(self, players: List[Player], save_results: bool = True):
         """
         Create a new instance of the Arena, the manager of the game
         Set the 'other players' field for each player. Shuffle it to reduce any bias on the order in which players
         are listed.
         :param players: the players to use
+        :param save_results: whether to persist this game to MongoDB at the end
         """
         self.players = players
+        self.save_results = save_results
         for player in self.players:
             others = [p for p in players if p.name != player.name]
             random.shuffle(others)
@@ -59,6 +61,8 @@ class Arena:
         game.save()
 
     def save_game(self):
+        if not self.save_results:
+            return
         if os.getenv("MONGO_URI"):
             try:
                 names = [player.name for player in self.players]
@@ -127,37 +131,35 @@ class Arena:
     @classmethod
     def model_names(cls) -> List[str]:
         """
-        Determine the list of model names to use in a new Arena
-        If there's an environment variable ARENA=random then pick 4 random model names
-        otherwise use 4 cheap models
-        The arena should support 3 or more names, although only 4 has been tested
-        :return: a list of names of LLMs for a new Arena
+        Pick model names from the set of currently available providers (those with API keys set).
+        Picks up to 4 at random; caller is responsible for checking the minimum count.
+        :return: a list of model names for a new Arena
         """
-        arena_type = os.getenv("ARENA")
-        if arena_type == "random":
-            return random.sample(LLM.all_model_names(), 4)
-        else:
-            return [
-                "openai/gpt-oss-120b",
-                "gpt-5-nano",
-                # "gemini-2.5-pro",
-                "grok-4-fast",
-                "claude-haiku-4-5",
-            ]
+        available = LLM.all_model_names()
+        count = min(4, len(available))
+        return random.sample(available, count)
+
+    @classmethod
+    def with_models(cls, model_names: List[str], save_results: bool = True) -> Self:
+        """
+        Create an Arena with an explicit list of model names chosen by the user.
+        :param model_names: ordered list of model names, one per player
+        :param save_results: whether to persist this game to MongoDB at the end
+        :return: an Arena instance
+        """
+        players = [
+            Player(name, model_name, cls.TEMPERATURE)
+            for name, model_name in zip(cls.NAMES, model_names)
+        ]
+        return cls(players, save_results=save_results)
 
     @classmethod
     def default(cls) -> Self:
         """
-        Return a new instance of Arena with default players
+        Return a new instance of Arena with randomly selected available models.
         :return: an Arena instance
         """
-        names = cls.NAMES
-        model_names = cls.model_names()
-        players = [
-            Player(name, model_name, cls.TEMPERATURE)
-            for name, model_name in zip(names, model_names)
-        ]
-        return cls(players)
+        return cls.with_models(cls.model_names())
 
     def turn_name(self) -> str:
         return f"Turn {self.turn}"
